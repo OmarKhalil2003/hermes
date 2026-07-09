@@ -1,7 +1,7 @@
 [project]
-name = "research-assistant"
+name = "hermes"
 version = "0.1.0"
-description = "Production-ready multi-agent AI research assistant platform"
+description = "Hermes: A production-ready multi-agent AI research and retrieval platform"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

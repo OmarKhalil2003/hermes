@@ -1,6 +1,6 @@
-# Enterprise AI Research Assistant Platform
+# Hermes: Enterprise AI Document Intelligence Platform
 
-Designed and built as a production-ready, multi-agent AI research platform featuring LangGraph orchestration, hybrid vector/keyword retrieval, QLoRA fine-tuning, MLflow experiment tracking, Docker Compose development, and Prometheus monitoring.
+Designed and built as a production-ready, multi-agent AI research and retrieval platform featuring LangGraph orchestration, hybrid vector/keyword retrieval, QLoRA fine-tuning, MLflow experiment tracking, Docker Compose development, and Prometheus monitoring.
 
 ---
 
@@ -55,7 +55,7 @@ Designed and built as a production-ready, multi-agent AI research platform featu
 ## 📂 Folder Structure
 
 ```
-research-assistant/
+hermes/
 ├── backend/          # FastAPI application server and routers
 │   └── core/         # Core application configurations, logging, security
 ├── frontend/         # Next.js UI typescript application

@@ -15,7 +15,7 @@ class DatabaseSettings(BaseSettings):
     port: int = Field(default=5432)
     user: str = Field(default="postgres")
     password: str = Field(default="postgres")
-    name: str = Field(default="research_assistant")
+    name: str = Field(default="hermes")
 
     @property
     def url(self) -> str:
@@ -98,7 +98,7 @@ class MLflowSettings(BaseSettings):
     )
 
     tracking_uri: str = Field(default="http://localhost:5000")
-    experiment_name: str = Field(default="research_assistant_evaluation")
+    experiment_name: str = Field(default="hermes_evaluation")
 
 
 class SecuritySettings(BaseSettings):
@@ -142,7 +142,7 @@ class Settings(BaseSettings):
     )
 
     # General
-    app_name: str = Field(default="Enterprise AI Research Assistant")
+    app_name: str = Field(default="Hermes AI Research Assistant")
     environment: Literal["development", "production", "testing"] = Field(
         default="development"
     )

@@ -48,9 +48,7 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_record)
 
 
-def setup_logger(
-    name: str = "research_assistant", level: str = "INFO"
-) -> logging.Logger:
+def setup_logger(name: str = "hermes", level: str = "INFO") -> logging.Logger:
     """Configures and returns a structured JSON logger.
 
     Args:
