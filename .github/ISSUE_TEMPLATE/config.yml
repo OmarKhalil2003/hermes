@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Platform Specifications
+    url: https://github.com/your-org/research-assistant/blob/main/IMPLEMENTATION_ROADMAP.md
+    about: Please refer to the Implementation Roadmap for phase descriptions and milestones.
