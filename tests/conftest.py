@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import AsyncGenerator, Generator
+
 import pytest
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -14,7 +15,7 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+def event_loop() -> Generator[asyncio.AbstractEventLoop]:
     """Creates a session-scoped asyncio event loop.
 
     Yields:
@@ -26,7 +27,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 
 
 @pytest.fixture(scope="session")
-async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
+async def test_engine() -> AsyncGenerator[AsyncEngine]:
     """Initializes a session-scoped AsyncEngine and creates tables.
 
     Yields:
@@ -49,7 +50,7 @@ async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest.fixture
-async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession]:
     """Provides a transaction-isolated database session.
 
     All changes made during a test will be rolled back automatically.
@@ -68,8 +69,5 @@ async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, N
         autoflush=False,
     )
 
-    async with session_factory() as session:
-        # Wrap everything in a transaction which will roll back automatically
-        async with session.begin():
-            yield session
-            # Automatic rollback occurs here at block exit
+    async with session_factory() as session, session.begin():
+        yield session

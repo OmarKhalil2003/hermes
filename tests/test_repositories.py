@@ -1,14 +1,11 @@
 import datetime
 from uuid import uuid4
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models.audit import AuditLog
-from backend.models.auth import Permission, Role, Session, User
-from backend.models.chat import Conversation, Message
-from backend.models.document import Chunk, Document
-from backend.models.jobs import Evaluation, TrainingJob
+from backend.models.auth import Role
 from backend.repositories.audit import AuditLogRepository
 from backend.repositories.auth import (
     PermissionRepository,
