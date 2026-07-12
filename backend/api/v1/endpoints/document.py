@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -11,6 +12,7 @@ from backend.core.database import get_db
 from backend.core.logging import logger
 from backend.models.auth import User
 from backend.repositories.document import ChunkRepository, DocumentRepository
+from backend.services.search import HybridSearchService
 
 router = APIRouter()
 
@@ -105,6 +107,37 @@ async def upload_document(
         "file_size": doc.file_size,
         "status": doc.status,
     }
+
+
+@router.get("/search")
+async def search_documents(
+    query: str,
+    document_id: UUID | None = None,
+    limit: int = 5,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_active_user),
+) -> Any:
+    """Performs a hybrid search query.
+
+    Combines BM25, Qdrant vectors, and Cross-Encoder ranking.
+    """
+    search_service = HybridSearchService(db)
+    try:
+        return await search_service.search(
+            query=query,
+            user_id=current_user.id,
+            document_id=document_id,
+            limit=limit,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Hybrid search failed: {e}",
+        ) from e
 
 
 @router.get("/{document_id}")

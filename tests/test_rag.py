@@ -1,7 +1,8 @@
 from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import UUID
 
+import numpy as np
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,9 +116,21 @@ async def test_duplicate_check_and_processing_task(
     doc_repo = DocumentRepository(db_session)
     chunk_repo = ChunkRepository(db_session)
 
+    # Mock embedding model to return numpy arrays
+    mock_embed = MagicMock()
+    mock_embed.encode.return_value = np.array([[0.1] * 384])  # batch of 1 vector
+
     # Resolve session to ensure local SQLite session is shared in task run
     # Execute celery task synchronously for the first document
-    with patch("backend.celery_worker.tasks.async_session_factory") as mock_sf:
+    with (
+        patch("backend.celery_worker.tasks.async_session_factory") as mock_sf,
+        patch("backend.celery_worker.tasks.init_qdrant_collection"),
+        patch("backend.celery_worker.tasks.qdrant_client"),
+        patch(
+            "backend.celery_worker.tasks.get_embedding_model",
+            return_value=mock_embed,
+        ),
+    ):
         mock_sf.return_value.__aenter__.return_value = db_session
 
         res1 = process_document_task(doc_ids[0])
