@@ -27,6 +27,19 @@ class DocumentRepository(BaseRepository[Document]):
         result = await self.db_session.execute(query)
         return result.scalars().all()
 
+    async def get_by_checksum(self, checksum: str) -> Document | None:
+        """Retrieves a document with the matching SHA-256 checksum.
+
+        Args:
+            checksum: The pre-calculated SHA-256 file checksum.
+
+        Returns:
+            Document | None: The document if found, else None.
+        """
+        query = select(Document).where(Document.checksum == checksum)
+        result = await self.db_session.execute(query)
+        return result.scalars().first()
+
 
 class ChunkRepository(BaseRepository[Chunk]):
     """Repository implementation for Chunk-specific database queries."""
