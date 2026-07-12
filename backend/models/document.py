@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, ForeignKey, Uuid
+from sqlalchemy import JSON, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.models.base import Base, TimestampMixin
@@ -27,6 +27,7 @@ class Document(Base, TimestampMixin):
     file_path: Mapped[str] = mapped_column(nullable=False)
     mime_type: Mapped[str] = mapped_column(nullable=False)
     file_size: Mapped[int] = mapped_column(nullable=False)
+    checksum: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
     status: Mapped[str] = mapped_column(default="pending", nullable=False)
 
     # Relationships
