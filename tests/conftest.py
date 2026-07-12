@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
-    async_sessionmaker,
     create_async_engine,
 )
 
@@ -61,13 +60,17 @@ async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession]:
     Yields:
         AsyncSession: The database session.
     """
-    session_factory = async_sessionmaker(
-        bind=test_engine,
-        class_=AsyncSession,
+    connection = await test_engine.connect()
+    trans = await connection.begin()
+
+    session = AsyncSession(
+        bind=connection,
         expire_on_commit=False,
-        autocommit=False,
-        autoflush=False,
+        join_transaction_mode="create_savepoint",
     )
 
-    async with session_factory() as session, session.begin():
-        yield session
+    yield session
+
+    await session.close()
+    await trans.rollback()
+    await connection.close()

@@ -71,7 +71,7 @@ select = [
     "ERA", # flake8-eradicate (commented-out code)
     "RUF", # Ruff-specific rules
 ]
-ignore = []
+ignore = ["B008"]
 
 [tool.mypy]
 python_version = "3.13"
