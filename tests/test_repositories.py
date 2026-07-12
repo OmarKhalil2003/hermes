@@ -83,7 +83,9 @@ async def test_role_and_permission_repositories(db_session: AsyncSession) -> Non
     assert perm.name == "document:read"
 
     # Test Create Role
-    role = await role_repo.create({"name": "researcher", "description": "Researcher role"})
+    role = await role_repo.create(
+        {"name": "researcher", "description": "Researcher role"}
+    )
     assert role.id is not None
     assert role.name == "researcher"
 
@@ -102,7 +104,10 @@ async def test_role_and_permission_repositories(db_session: AsyncSession) -> Non
 
     # Test Relationship linkage
     from sqlalchemy.orm import selectinload
-    stmt = select(Role).where(Role.id == role.id).options(selectinload(Role.permissions))
+
+    stmt = (
+        select(Role).where(Role.id == role.id).options(selectinload(Role.permissions))
+    )
     result = await db_session.execute(stmt)
     role_loaded = result.scalars().one()
 
@@ -206,7 +211,9 @@ async def test_conversation_and_message_repositories(db_session: AsyncSession) -
     msg_repo = MessageRepository(db_session)
 
     # Create User
-    user = await user_repo.create({"email": "chat@example.com", "hashed_password": "pw"})
+    user = await user_repo.create(
+        {"email": "chat@example.com", "hashed_password": "pw"}
+    )
 
     # Create Conversation
     conv = await conv_repo.create({"user_id": user.id, "title": "AI Assistant Chat"})
