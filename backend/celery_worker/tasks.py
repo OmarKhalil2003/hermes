@@ -13,10 +13,13 @@ import docx
 import pdfplumber
 import pptx
 import pytesseract
+from qdrant_client.http.models import PointStruct
+from sentence_transformers import SentenceTransformer
 from sqlalchemy import select
 
 from backend.celery_worker.celery_app import celery_app
 from backend.core.database import async_session_factory
+from backend.core.qdrant import COLLECTION_NAME, init_qdrant_collection, qdrant_client
 from backend.models.document import Document
 from backend.repositories.document import ChunkRepository, DocumentRepository
 from rag.chunking import RecursiveTextSplitter
@@ -155,6 +158,17 @@ def run_async(coro: Coroutine[Any, Any, Any]) -> Any:
         return future.result()
 
 
+_embed_model = None
+
+
+def get_embedding_model() -> SentenceTransformer:
+    """Lazy-loader for the sentence-transformers embedding model."""
+    global _embed_model
+    if _embed_model is None:
+        _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return cast(SentenceTransformer, _embed_model)
+
+
 @celery_app.task(name="backend.celery_worker.tasks.process_document_task")  # type: ignore
 def process_document_task(document_id_str: str) -> str:
     """Asynchronous Celery task that processes uploaded documents.
@@ -243,8 +257,16 @@ def process_document_task(document_id_str: str) -> str:
             splitter = RecursiveTextSplitter(chunk_size=1000, chunk_overlap=200)
             chunks = splitter.split_text(text)
 
-            # 5. Insert Chunks into database
+            # 5. Insert Chunks into database and Qdrant vector db
             try:
+                # Ensure vector database collection is initialized
+                init_qdrant_collection()
+
+                model = get_embedding_model()
+                # Batched encoding for optimized performance
+                embeddings = model.encode(chunks)
+
+                points = []
                 for idx, chunk_text in enumerate(chunks):
                     # Compile chunk metadata
                     chunk_meta = {
@@ -253,7 +275,7 @@ def process_document_task(document_id_str: str) -> str:
                         "ingested_at": datetime.now(UTC).isoformat(),
                         **file_metadata,
                     }
-                    await chunk_repo.create(
+                    db_chunk = await chunk_repo.create(
                         {
                             "document_id": doc.id,
                             "content": chunk_text,
@@ -261,6 +283,30 @@ def process_document_task(document_id_str: str) -> str:
                             "metadata_json": chunk_meta,
                         }
                     )
+
+                    # Build Qdrant vector payload
+                    payload = {
+                        "document_id": str(doc.id),
+                        "chunk_id": str(db_chunk.id),
+                        "user_id": str(doc.user_id),
+                        "filename": doc.filename,
+                        "content": chunk_text,
+                        "index": idx,
+                        "ingested_at": chunk_meta["ingested_at"],
+                    }
+                    points.append(
+                        PointStruct(
+                            id=str(db_chunk.id),
+                            vector=embeddings[idx].tolist(),
+                            payload=payload,
+                        )
+                    )
+
+                # Bulk upsert points to Qdrant
+                qdrant_client.upsert(
+                    collection_name=COLLECTION_NAME,
+                    points=points,
+                )
 
                 # Mark document processed
                 doc.status = "processed"
@@ -271,7 +317,7 @@ def process_document_task(document_id_str: str) -> str:
                 doc.status = "failed"
                 await doc_repo.update(doc, doc)
                 await session.commit()
-                return f"Database chunk storage failed: {e}"
+                return f"Database/vector chunk storage failed: {e}"
 
             return (
                 f"Ingested {doc.filename} successfully. Generated {len(chunks)} chunks."
