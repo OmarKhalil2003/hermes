@@ -1,13 +1,27 @@
 import time
 from typing import Any
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
+from backend.api.deps import check_permissions
+from backend.api.v1.router import api_router
 from backend.core.config import settings
 from backend.core.logging import logger, request_id_var, trace_id_var
+from backend.models.auth import User
+from backend.schemas.auth import UserOut
 
 app = FastAPI(title=settings.app_name, debug=settings.debug, version="0.1.0")
+
+app.include_router(api_router, prefix="/api/v1")
+
+
+@app.get("/api/v1/protected", response_model=UserOut)
+async def protected_route(
+    current_user: User = Depends(check_permissions("document:upload")),
+) -> Any:
+    """A test endpoint protected by custom RBAC permission checks."""
+    return current_user
 
 
 @app.middleware("http")
