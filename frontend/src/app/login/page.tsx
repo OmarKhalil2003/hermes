@@ -44,8 +44,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.replace("/dashboard");
-    } catch (err: any) {
-      setServerError(err.message || "Failed to log in. Please check your credentials.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to log in. Please check your credentials.";
+      setServerError(msg);
     } finally {
       setIsSubmitting(false);
     }

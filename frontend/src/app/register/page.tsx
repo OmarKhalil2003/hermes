@@ -52,8 +52,9 @@ export default function RegisterPage() {
     try {
       await register(email, password, isSuperuser);
       router.replace("/dashboard");
-    } catch (err: any) {
-      setServerError(err.message || "Failed to create account. Email might be in use.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create account. Email might be in use.";
+      setServerError(msg);
     } finally {
       setIsSubmitting(false);
     }
