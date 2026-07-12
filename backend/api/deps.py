@@ -12,6 +12,14 @@ from backend.core.security import decode_token
 from backend.models.auth import Permission, Role, User, role_permissions, user_roles
 from backend.repositories.auth import UserRepository
 
+__all__ = [
+    "check_permissions",
+    "get_active_user",
+    "get_current_user",
+    "get_db",
+    "reusable_oauth2",
+]
+
 # OAuth2 Password Bearer flow scheme pointing to our login route
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
