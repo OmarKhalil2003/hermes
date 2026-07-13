@@ -14,20 +14,6 @@ from backend.repositories.document import ChunkRepository, DocumentRepository
 from rag.chunking import RecursiveTextSplitter
 
 
-@pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
-    """Test client fixture that overrides get_db dependency."""
-
-    async def override_get_db() -> AsyncGenerator[AsyncSession]:
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        yield ac
-    app.dependency_overrides.clear()
-
 
 def test_recursive_text_splitter() -> None:
     """Verifies that RecursiveTextSplitter chunk sizes and overlaps are respected."""
