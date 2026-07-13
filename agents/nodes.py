@@ -106,9 +106,7 @@ async def retriever_node(state: AgentState) -> dict[str, Any]:
             user_uuid = uuid.UUID(state["user_id"])
 
     if not user_uuid:
-        return {
-            "messages": [AIMessage(content="User ID missing. Skipping retrieval.")]
-        }
+        return {"messages": [AIMessage(content="User ID missing. Skipping retrieval.")]}
 
     limit = state.get("limit") or 5
     retrieved_chunks = []

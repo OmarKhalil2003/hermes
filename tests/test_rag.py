@@ -14,7 +14,6 @@ from backend.repositories.document import ChunkRepository, DocumentRepository
 from rag.chunking import RecursiveTextSplitter
 
 
-
 def test_recursive_text_splitter() -> None:
     """Verifies that RecursiveTextSplitter chunk sizes and overlaps are respected."""
     splitter = RecursiveTextSplitter(chunk_size=50, chunk_overlap=10)

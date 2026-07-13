@@ -16,9 +16,7 @@ class CheckpointModel(Base, TimestampMixin):
         String(255), primary_key=True, default=""
     )
     checkpoint_id: Mapped[str] = mapped_column(String(255), primary_key=True)
-    parent_checkpoint_id: Mapped[str | None] = mapped_column(
-        String(255), nullable=True
-    )
+    parent_checkpoint_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     checkpoint_data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     metadata_data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
