@@ -9,12 +9,20 @@ from backend.models.auth import (
 )
 from backend.models.base import Base, TimestampMixin
 from backend.models.chat import Conversation, Message
+from backend.models.checkpoint import (
+    CheckpointBlobModel,
+    CheckpointModel,
+    CheckpointWriteModel,
+)
 from backend.models.document import Chunk, Document
 from backend.models.jobs import Evaluation, TrainingJob
 
 __all__ = [
     "AuditLog",
     "Base",
+    "CheckpointBlobModel",
+    "CheckpointModel",
+    "CheckpointWriteModel",
     "Chunk",
     "Conversation",
     "Document",

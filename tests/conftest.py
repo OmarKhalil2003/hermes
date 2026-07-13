@@ -2,12 +2,15 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     create_async_engine,
 )
 
+from backend.core.database import get_db
+from backend.main import app
 from backend.models.base import Base
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -74,3 +77,18 @@ async def db_session(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession]:
     await session.close()
     await trans.rollback()
     await connection.close()
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
+    """Test client fixture that overrides get_db dependency."""
+
+    async def override_get_db() -> AsyncGenerator[AsyncSession]:
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+    app.dependency_overrides.clear()
