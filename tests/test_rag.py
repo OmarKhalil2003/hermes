@@ -183,3 +183,35 @@ async def test_document_deletion(client: AsyncClient, db_session: AsyncSession) 
     doc_repo = DocumentRepository(db_session)
     doc = await doc_repo.get(UUID(doc_id))
     assert doc is None
+
+
+@pytest.mark.asyncio
+async def test_list_documents(client: AsyncClient) -> None:
+    # 1. Register & Login user
+    reg_data = {"email": "rag_list@example.com", "password": "mypassword123"}
+    await client.post("/api/v1/auth/register", json=reg_data)
+    login_resp = await client.post(
+        "/api/v1/auth/login",
+        data={"username": "rag_list@example.com", "password": "mypassword123"},
+    )
+    access_token = login_resp.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    # 2. Initially listing should return empty list
+    response = await client.get("/api/v1/documents", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == []
+
+    # 3. Upload a file (mocked Celery delay)
+    files = {"file": ("list_test.txt", b"Content for listing.", "text/plain")}
+    with patch("backend.api.v1.endpoints.document.process_document_task.delay"):
+        await client.post("/api/v1/documents/upload", files=files, headers=headers)
+
+    # 4. Listing should now contain the uploaded file
+    response = await client.get("/api/v1/documents", headers=headers)
+    assert response.status_code == 200
+    docs = response.json()
+    assert len(docs) == 1
+    assert docs[0]["filename"] == "list_test.txt"
+    assert docs[0]["status"] == "pending"
+    assert docs[0]["chunks_count"] == 0
