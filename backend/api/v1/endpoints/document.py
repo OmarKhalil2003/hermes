@@ -211,3 +211,30 @@ async def delete_document(
     await db.commit()
 
     return {"detail": "Document and extracted chunks deleted successfully."}
+
+
+@router.get("", response_model=list[dict[str, Any]])
+async def list_documents(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_active_user),
+) -> Any:
+    """Lists all documents uploaded by the current user."""
+    doc_repo = DocumentRepository(db)
+    docs = await doc_repo.get_by_user_id(current_user.id)
+
+    result = []
+    chunk_repo = ChunkRepository(db)
+    for doc in docs:
+        chunks = await chunk_repo.get_chunks_by_document_id(doc.id)
+        result.append(
+            {
+                "id": doc.id,
+                "filename": doc.filename,
+                "mime_type": doc.mime_type,
+                "file_size": doc.file_size,
+                "status": doc.status,
+                "created_at": doc.created_at,
+                "chunks_count": len(chunks),
+            }
+        )
+    return result
