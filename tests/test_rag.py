@@ -1,15 +1,12 @@
-from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 import numpy as np
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.deps import get_db
 from backend.celery_worker.tasks import process_document_task
-from backend.main import app
 from backend.repositories.document import ChunkRepository, DocumentRepository
 from rag.chunking import RecursiveTextSplitter
 
