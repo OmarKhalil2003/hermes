@@ -82,7 +82,9 @@ export default function DeploymentConsole() {
   };
 
   useEffect(() => {
-    fetchData();
+    Promise.resolve().then(() => {
+      fetchData();
+    });
     // Poll data every 5 seconds to track training job progress
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
@@ -119,6 +121,7 @@ export default function DeploymentConsole() {
         setErrorMessage(errData.detail || "Failed to start training job.");
       }
     } catch (err) {
+      console.error(err);
       setErrorMessage("Network error: failed to submit training job.");
     } finally {
       setIsSubmitting(false);
@@ -139,6 +142,7 @@ export default function DeploymentConsole() {
         alert(errData.detail || "Failed to activate model deployment.");
       }
     } catch (err) {
+      console.error(err);
       alert("Network error: failed to update active deployment.");
     }
   };
