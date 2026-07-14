@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: hermes
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: backend
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: hermes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: hermes-backend:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: ENVIRONMENT
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secret
+                  key: POSTGRES_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: REDIS_PORT
+            - name: RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: RABBITMQ_HOST
+            - name: RABBITMQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: RABBITMQ_PORT
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: CELERY_BROKER_URL
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: CELERY_RESULT_BACKEND
+            - name: QDRANT_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: QDRANT_HOST
+            - name: QDRANT_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: QDRANT_PORT
+            - name: MLFLOW_TRACKING_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: MLFLOW_TRACKING_URI
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: OTEL_EXPORTER_OTLP_ENDPOINT
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secret
+                  key: JWT_SECRET_KEY
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: hermes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80

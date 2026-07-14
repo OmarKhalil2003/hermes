@@ -1,0 +1,212 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: hermes
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-pvc
+  namespace: hermes
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# 1. PostgreSQL Service and Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: hermes
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: hermes-config
+                  key: DB_NAME
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+
+---
+# 2. Redis Service and Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: hermes
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+
+---
+# 3. RabbitMQ Service and Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: hermes
+spec:
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+  selector:
+    app: rabbitmq
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management-alpine
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+
+---
+# 4. Qdrant Service and Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: hermes
+spec:
+  ports:
+    - name: http
+      port: 6333
+      targetPort: 6333
+    - name: grpc
+      port: 6334
+      targetPort: 6334
+  selector:
+    app: qdrant
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.8.0
+          ports:
+            - containerPort: 6333
+            - containerPort: 6334
+          volumeMounts:
+            - name: qdrant-storage
+              mountPath: /qdrant/storage
+      volumes:
+        - name: qdrant-storage
+          persistentVolumeClaim:
+            claimName: qdrant-pvc
