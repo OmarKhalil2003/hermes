@@ -1,0 +1,32 @@
+[
+  {
+    "query": "What is Hermes AI Workspace?",
+    "ground_truth": "Hermes AI Workspace is an advanced multi-agent intelligence and document search platform designed to ingest, process, and query research repositories using FastAPI, LangGraph, and vector databases.",
+    "context": "Hermes is a production-ready multi-agent AI research and retrieval platform. It combines FastAPI for the backend, Next.js for the frontend, LangGraph for multi-agent orchestration, and Qdrant for vector similarity search. The platform supports document ingestion, semantic search, and automated report generation."
+  },
+  {
+    "query": "How does the hybrid search work in Hermes?",
+    "ground_truth": "Hybrid search in Hermes merges keyword-based BM25 relevance scores with vector-based Qdrant cosine similarity scores, passing the top candidates to a Cross-Encoder reranking model for optimal retrieval quality.",
+    "context": "The Hermes search pipeline implements a hybrid retrieval strategy. First, BM25 keyword matching scores documents by term frequency. Simultaneously, dense vector embeddings from sentence-transformers compute cosine similarity in Qdrant. The two score sets are fused using reciprocal rank fusion, and a Cross-Encoder reranker refines the final ordering."
+  },
+  {
+    "query": "What technologies does Hermes use?",
+    "ground_truth": "Hermes integrates FastAPI, Next.js, Celery, PostgreSQL, Redis, Qdrant vector databases, and LangGraph multi-agent orchestrations to deliver a full-stack AI research platform.",
+    "context": "The Hermes technology stack includes: FastAPI for REST APIs, Next.js with TypeScript for the frontend, PostgreSQL with SQLAlchemy for relational data, Redis for caching and Celery task queues, Qdrant for vector storage, LangGraph for agent workflows, and MLflow for experiment tracking."
+  },
+  {
+    "query": "Can I export reports from Hermes?",
+    "ground_truth": "Yes, Hermes provides secure report generator tools that output structured PDF files using ReportLab flowables and PowerPoint slides using python-pptx, with authenticated download endpoints.",
+    "context": "Hermes includes a report generation subsystem. The PDF generator uses ReportLab to create structured documents with headings, paragraphs, and tables. The PowerPoint generator uses python-pptx for slide decks. Both formats are served through authenticated FastAPI endpoints with path-traversal protection."
+  },
+  {
+    "query": "How does Hermes handle document ingestion?",
+    "ground_truth": "Hermes ingests documents by parsing PDFs with pdfplumber and PyPDF2, splitting text into overlapping chunks using recursive text splitters, generating sentence-transformer embeddings, and storing vectors in Qdrant alongside metadata in PostgreSQL.",
+    "context": "Document ingestion in Hermes follows a multi-stage pipeline: files are uploaded via the API, parsed using pdfplumber or PyPDF2 for PDFs and python-docx for Word documents, chunked with configurable overlap using recursive text splitting, embedded with sentence-transformers models, and finally indexed into Qdrant with document metadata stored in PostgreSQL."
+  },
+  {
+    "query": "What is the agent architecture in Hermes?",
+    "ground_truth": "Hermes uses a LangGraph-based multi-agent architecture with a supervisor node that routes queries to specialized sub-agents including a researcher, analyst, and report writer, coordinated through a stateful graph workflow.",
+    "context": "The Hermes agent system is built on LangGraph's StateGraph. A supervisor agent analyzes incoming queries and delegates to specialized sub-agents: a researcher agent for document retrieval, an analyst agent for data synthesis, and a report writer agent for generating formatted outputs. The agents communicate through shared state and the supervisor manages the workflow transitions."
+  }
+]
