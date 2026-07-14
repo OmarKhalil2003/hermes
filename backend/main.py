@@ -1,4 +1,5 @@
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -15,7 +16,7 @@ from backend.services.deployment import init_active_adapter
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     await init_active_adapter()
     yield
 

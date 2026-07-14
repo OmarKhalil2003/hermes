@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager
 from unittest.mock import patch
 from uuid import UUID
@@ -36,7 +37,7 @@ async def admin_user(db_session: AsyncSession) -> User:
 
 
 @pytest.fixture
-def override_auth(admin_user: User) -> None:
+def override_auth(admin_user: User) -> Generator[None]:
     """Bypasses API security dependencies for active user testing."""
     from backend.api.deps import check_permissions, get_active_user
     from backend.main import app
@@ -133,7 +134,7 @@ async def test_celery_train_model_task(
     # 2. Run the Celery task (mocking training implementation dependencies
     # to avoid full HuggingFace model loads)
     @asynccontextmanager
-    async def mock_session_factory():
+    async def mock_session_factory() -> AsyncGenerator[AsyncSession]:
         yield db_session
 
     with (
