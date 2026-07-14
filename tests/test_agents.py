@@ -211,16 +211,6 @@ async def test_agent_research_api_endpoint(
     mock_get_graph: Any, client: AsyncClient
 ) -> None:
     """Verifies that endpoint streams SSE events."""
-    # 1. Setup authenticated user headers
-    reg_data = {"email": "agenttest@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "agenttest@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
     # 2. Mock state stream events sequence
     mock_graph = MagicMock()
 
@@ -261,11 +251,10 @@ async def test_agent_research_api_endpoint(
     mock_graph.astream_events = mock_astream_events
     mock_get_graph.return_value = mock_graph
 
-    # 3. Invoke endpoint and parse streamed events
+    # 3. Invoke endpoint and parse streamed events (auth is bypassed in backend)
     response = await client.post(
         "/api/v1/agents/research",
         json={"query": "Test query string.", "thread_id": "thread-sse-1"},
-        headers=headers,
     )
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/event-stream; charset=utf-8"

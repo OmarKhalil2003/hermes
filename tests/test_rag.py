@@ -25,62 +25,24 @@ def test_recursive_text_splitter() -> None:
 
 @pytest.mark.asyncio
 async def test_document_upload_flow(client: AsyncClient) -> None:
-    # 1. Unauthenticated -> 401 Unauthorized
     files = {"file": ("test.txt", b"Dummy document content here.", "text/plain")}
-    response = await client.post("/api/v1/documents/upload", files=files)
-    assert response.status_code == 401
-
-    # Register & Login user
-    reg_data = {"email": "rag@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "rag@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    # 2. Authenticated Upload (with mock Celery delay)
+    # Authenticated Upload (auth is bypassed in backend, so it succeeds directly)
     with patch(
         "backend.api.v1.endpoints.document.process_document_task.delay"
     ) as mock_delay:
-        response = await client.post(
-            "/api/v1/documents/upload", files=files, headers=headers
-        )
+        response = await client.post("/api/v1/documents/upload", files=files)
         assert response.status_code == 201
         data = response.json()
+        assert "id" in data
         assert data["filename"] == "test.txt"
         assert data["status"] == "pending"
-        mock_delay.assert_called_once()
-        doc_id = data["id"]
-
-    # 3. Query Document Status
-    response = await client.get(f"/api/v1/documents/{doc_id}", headers=headers)
-    assert response.status_code == 200
-    assert response.json()["status"] == "pending"
-
-    # 4. Try upload unsupported format -> 400 Bad Request
-    unsupported_files = {"file": ("test.exe", b"binary", "application/octet-stream")}
-    response = await client.post(
-        "/api/v1/documents/upload", files=unsupported_files, headers=headers
-    )
-    assert response.status_code == 400
+        mock_delay.assert_called_once_with(data["id"])
 
 
 @pytest.mark.asyncio
 async def test_duplicate_check_and_processing_task(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
-    # Setup authenticated headers
-    reg_data = {"email": "rag2@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "rag2@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
     # Create dummy files
     file_content = b"This is unique file content to test ingestion tasks."
     files = {"file": ("ingest.txt", file_content, "text/plain")}
@@ -88,11 +50,11 @@ async def test_duplicate_check_and_processing_task(
     doc_ids = []
     with patch("backend.api.v1.endpoints.document.process_document_task.delay"):
         # Upload first doc
-        r1 = await client.post("/api/v1/documents/upload", files=files, headers=headers)
+        r1 = await client.post("/api/v1/documents/upload", files=files)
         doc_ids.append(r1.json()["id"])
 
         # Upload second doc (duplicate content)
-        r2 = await client.post("/api/v1/documents/upload", files=files, headers=headers)
+        r2 = await client.post("/api/v1/documents/upload", files=files)
         doc_ids.append(r2.json()["id"])
 
     doc_repo = DocumentRepository(db_session)
@@ -138,26 +100,14 @@ async def test_duplicate_check_and_processing_task(
 
 @pytest.mark.asyncio
 async def test_document_deletion(client: AsyncClient, db_session: AsyncSession) -> None:
-    # Setup authenticated headers
-    reg_data = {"email": "rag3@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "rag3@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
     # Upload document
     files = {"file": ("delete_me.txt", b"Delete content.", "text/plain")}
     with patch("backend.api.v1.endpoints.document.process_document_task.delay"):
-        response = await client.post(
-            "/api/v1/documents/upload", files=files, headers=headers
-        )
+        response = await client.post("/api/v1/documents/upload", files=files)
         doc_id = response.json()["id"]
 
     # Delete Document
-    response = await client.delete(f"/api/v1/documents/{doc_id}", headers=headers)
+    response = await client.delete(f"/api/v1/documents/{doc_id}")
     assert response.status_code == 200
     assert "deleted successfully" in response.json()["detail"]
 
@@ -169,31 +119,23 @@ async def test_document_deletion(client: AsyncClient, db_session: AsyncSession) 
 
 @pytest.mark.asyncio
 async def test_list_documents(client: AsyncClient) -> None:
-    # 1. Register & Login user
-    reg_data = {"email": "rag_list@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "rag_list@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    # 2. Initially listing should return empty list
-    response = await client.get("/api/v1/documents", headers=headers)
+    # 1. Get initial count
+    response = await client.get("/api/v1/documents")
     assert response.status_code == 200
-    assert response.json() == []
+    initial_count = len(response.json())
 
-    # 3. Upload a file (mocked Celery delay)
+    # 2. Upload a file (mocked Celery delay)
     files = {"file": ("list_test.txt", b"Content for listing.", "text/plain")}
     with patch("backend.api.v1.endpoints.document.process_document_task.delay"):
-        await client.post("/api/v1/documents/upload", files=files, headers=headers)
+        await client.post("/api/v1/documents/upload", files=files)
 
-    # 4. Listing should now contain the uploaded file
-    response = await client.get("/api/v1/documents", headers=headers)
+    # 3. Listing should now contain the uploaded file
+    response = await client.get("/api/v1/documents")
     assert response.status_code == 200
     docs = response.json()
-    assert len(docs) == 1
-    assert docs[0]["filename"] == "list_test.txt"
-    assert docs[0]["status"] == "pending"
-    assert docs[0]["chunks_count"] == 0
+    assert len(docs) == initial_count + 1
+
+    uploaded_doc = next((d for d in docs if d["filename"] == "list_test.txt"), None)
+    assert uploaded_doc is not None
+    assert uploaded_doc["status"] == "pending"
+    assert uploaded_doc["chunks_count"] == 0

@@ -44,11 +44,8 @@ export default function Home() {
           <span className="font-bold tracking-tight text-white">Hermes AI</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link href="/register" className="text-sm font-semibold text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 border border-zinc-700 rounded-lg transition-colors">
-            Register
+          <Link href="/dashboard" className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition-colors shadow-[0_4px_20px_rgba(99,102,241,0.2)]">
+            Go to Workspace
           </Link>
         </div>
       </header>
@@ -73,16 +70,10 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto px-4 justify-center">
           <Link
-            href="/register"
+            href="/dashboard"
             className="flex h-12 items-center justify-center px-8 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-[0_4px_20px_rgba(99,102,241,0.3)]"
           >
-            Get Started Free
-          </Link>
-          <Link
-            href="/login"
-            className="flex h-12 items-center justify-center px-8 rounded-xl text-sm font-semibold text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-colors"
-          >
-            Sign In to Account
+            Launch Workspace Dashboard
           </Link>
         </div>
       </main>
