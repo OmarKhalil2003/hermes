@@ -80,7 +80,7 @@ def load_eval_config(path: str) -> list[EvalSample]:
 
 
 def generate_answers(
-    model: torch.nn.Module,
+    model: Any,
     tokenizer: PreTrainedTokenizerBase,
     samples: list[EvalSample],
     max_new_tokens: int = 128,
@@ -117,7 +117,9 @@ def generate_answers(
 
         # Decode only the newly generated tokens
         generated = outputs[0][input_ids.shape[1] :]
-        answer = tokenizer.decode(generated, skip_special_tokens=True).strip()
+        decoded = tokenizer.decode(generated, skip_special_tokens=True)
+        answer = decoded if isinstance(decoded, str) else decoded[0] if decoded else ""
+        answer = answer.strip()
         answers.append(answer if answer else "(empty)")
 
     return answers

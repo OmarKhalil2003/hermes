@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -26,7 +27,7 @@ TINY_TEST_MODEL = "sshleifer/tiny-gpt2"
 
 
 @pytest.fixture
-def eval_config_path(tmp_path: pytest.TempPathFactory) -> str:  # type: ignore[type-arg]
+def eval_config_path(tmp_path: Path) -> str:
     """Create a minimal evaluation config file."""
     config = [
         {
@@ -67,7 +68,7 @@ def test_load_eval_config(eval_config_path: str) -> None:
     assert samples[0].context != ""
 
 
-def test_load_eval_config_missing_keys(tmp_path: pytest.TempPathFactory) -> None:  # type: ignore[type-arg]
+def test_load_eval_config_missing_keys(tmp_path: Path) -> None:
     """Asserts ValueError when required keys are missing."""
     bad_config = [{"query": "Test?"}]
     path = str(tmp_path / "bad_config.json")
