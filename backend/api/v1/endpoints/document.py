@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_active_user
@@ -238,3 +239,49 @@ async def list_documents(
             }
         )
     return result
+
+
+@router.get("/reports", status_code=status.HTTP_200_OK)
+async def list_reports(
+    current_user: User = Depends(get_active_user),  # noqa: ARG001
+) -> list[dict[str, Any]]:
+    """List generated PDF and PPTX reports in the uploads directory."""
+    if not os.path.exists(UPLOAD_DIR):
+        return []
+
+    reports = []
+    for entry in os.scandir(UPLOAD_DIR):
+        if entry.is_file() and entry.name.lower().endswith((".pdf", ".pptx")):
+            stat = entry.stat()
+            reports.append(
+                {
+                    "filename": entry.name,
+                    "size_bytes": stat.st_size,
+                    "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                }
+            )
+    return reports
+
+
+@router.get("/reports/download/{filename}")
+async def download_report(
+    filename: str,
+    current_user: User = Depends(get_active_user),  # noqa: ARG001
+) -> FileResponse:
+    """Download a generated PDF or PPTX report securely."""
+    # Prevent path traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid filename."
+        )
+
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report file not found.",
+        )
+
+    return FileResponse(
+        file_path, media_type="application/octet-stream", filename=filename
+    )
