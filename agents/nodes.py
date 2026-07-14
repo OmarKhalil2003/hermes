@@ -36,10 +36,13 @@ class ReviewResponse(BaseModel):
 
 def get_llm() -> ChatOpenAI:
     """Helper to instantiate the ChatOpenAI client with environment parameters."""
+    from backend.services.deployment import get_active_adapter
+
     api_key = settings.models.openai_api_key or "dummy-key"
     base_url = settings.models.openai_api_base
+    active_model = get_active_adapter()
     return ChatOpenAI(
-        model=settings.models.llm_model,
+        model=active_model,
         api_key=SecretStr(api_key),
         base_url=base_url,
         temperature=0.0,

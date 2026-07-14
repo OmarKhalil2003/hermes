@@ -11,7 +11,22 @@ from backend.core.logging import logger, request_id_var, trace_id_var
 from backend.models.auth import User
 from backend.schemas.auth import UserOut
 
-app = FastAPI(title=settings.app_name, debug=settings.debug, version="0.1.0")
+from contextlib import asynccontextmanager
+from backend.services.deployment import init_active_adapter
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_active_adapter()
+    yield
+
+
+app = FastAPI(
+    title=settings.app_name,
+    debug=settings.debug,
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
 app.include_router(api_router, prefix="/api/v1")
 
