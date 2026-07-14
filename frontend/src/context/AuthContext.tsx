@@ -33,16 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const [user, setUser] = useState<UserProfile | null>(defaultProfile);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isLoading = false;
 
   // Fetch current user details from `/api/v1/protected`
   const fetchUserProfile = async (): Promise<UserProfile | null> => {
     try {
       const response = await apiFetch("/api/v1/protected");
       if (response.ok) {
-        const data: UserProfile = await response.json();
-        setUser(data);
-        return data;
+        return await response.json();
       }
     } catch (error) {
       console.error("Failed to load user profile:", error);
@@ -52,11 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Run on mount to sync with backend user profile if possible
   useEffect(() => {
-    fetchUserProfile();
+    let isMounted = true;
+    fetchUserProfile().then((profile) => {
+      if (isMounted && profile) {
+        setUser(profile);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (_email: string, _password: string) => {
     // No-op for authentication bypass
+    void _email;
+    void _password;
   };
 
   const register = async (
@@ -65,6 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     _isSuperuser: boolean = false
   ) => {
     // No-op for authentication bypass
+    void _email;
+    void _password;
+    void _isSuperuser;
   };
 
   const logout = () => {
@@ -81,7 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshProfile: async () => {
-          await fetchUserProfile();
+          const profile = await fetchUserProfile();
+          if (profile) {
+            setUser(profile);
+          }
         },
       }}
     >
