@@ -39,6 +39,8 @@ dependencies = [
     "reportlab>=4.0.0",
     "seaborn>=0.13.0",
     "rank-bm25>=0.2.2",
+    "bitsandbytes>=0.42.0",
+    "accelerate>=0.27.0",
 ]
 
 [dependency-groups]
