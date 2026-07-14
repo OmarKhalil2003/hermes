@@ -6,12 +6,15 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import UploadZone from "@/components/UploadZone";
 import FilesTable, { DocumentInfo } from "@/components/FilesTable";
 import SearchConsole from "@/components/SearchConsole";
+import AgentChatPanel from "@/components/AgentChatPanel";
+import ReportsLibrary from "@/components/ReportsLibrary";
 import { apiFetch } from "@/lib/api";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [files, setFiles] = useState<DocumentInfo[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+  const [activeTab, setActiveTab] = useState<"files" | "search" | "chat" | "reports">("files");
 
   const fetchDocuments = async () => {
     try {
@@ -84,7 +87,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           {/* Header text */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -100,63 +103,120 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Upload and Workspace Summary Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* Left side: Upload card */}
-            <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Upload Research Files</h3>
-              <UploadZone onUploadSuccess={fetchDocuments} />
-            </div>
-
-            {/* Right side: Session Profile Stats */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm relative overflow-hidden space-y-4">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Secure Session Details</h3>
-              <div className="space-y-4 text-xs font-mono">
-                <div>
-                  <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Account ID</span>
-                  <span className="text-zinc-300 break-all">{user?.id}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Email Address</span>
-                  <span className="text-zinc-300">{user?.email}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Account Created At</span>
-                  <span className="text-zinc-300">
-                    {user ? new Date(user.created_at).toLocaleString() : "Loading..."}
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* Tab Navigation Menu */}
+          <div className="flex border-b border-zinc-900 pb-px gap-6">
+            <button
+              onClick={() => setActiveTab("files")}
+              className={`pb-3 text-xs uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === "files"
+                  ? "text-indigo-400 border-indigo-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              Knowledge Library
+            </button>
+            <button
+              onClick={() => setActiveTab("search")}
+              className={`pb-3 text-xs uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === "search"
+                  ? "text-indigo-400 border-indigo-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              Semantic Search
+            </button>
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`pb-3 text-xs uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === "chat"
+                  ? "text-indigo-400 border-indigo-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              Agent Workspace
+            </button>
+            <button
+              onClick={() => setActiveTab("reports")}
+              className={`pb-3 text-xs uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === "reports"
+                  ? "text-indigo-400 border-indigo-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              Generated Reports
+            </button>
           </div>
 
-          {/* Files Table Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 flex items-center justify-between">
-              <span>Knowledge Collection</span>
-              <span className="text-xs text-zinc-400 font-normal font-sans">
-                {files.length} {files.length === 1 ? "document" : "documents"} indexed
-              </span>
-            </h3>
-            
-            {isLoadingFiles ? (
-              <div className="flex h-32 items-center justify-center rounded-2xl border border-zinc-900 bg-zinc-900/5 text-zinc-400">
-                <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Loading files...
+          {/* Dynamic Render Tab Views */}
+          <div className="pt-2">
+            {activeTab === "files" && (
+              <div className="space-y-12">
+                {/* Upload and Workspace Summary Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                  {/* Left side: Upload card */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Upload Research Files</h3>
+                    <UploadZone onUploadSuccess={fetchDocuments} />
+                  </div>
+
+                  {/* Right side: Session Profile Stats */}
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm relative overflow-hidden space-y-4">
+                    <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Secure Session Details</h3>
+                    <div className="space-y-4 text-xs font-mono">
+                      <div>
+                        <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Account ID</span>
+                        <span className="text-zinc-300 break-all">{user?.id}</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Email Address</span>
+                        <span className="text-zinc-300">{user?.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Account Created At</span>
+                        <span className="text-zinc-300">
+                          {user ? new Date(user.created_at).toLocaleString() : "Loading..."}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Files Table Section */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 flex items-center justify-between">
+                    <span>Knowledge Collection</span>
+                    <span className="text-xs text-zinc-400 font-normal font-sans">
+                      {files.length} {files.length === 1 ? "document" : "documents"} indexed
+                    </span>
+                  </h3>
+                  
+                  {isLoadingFiles ? (
+                    <div className="flex h-32 items-center justify-center rounded-2xl border border-zinc-900 bg-zinc-900/5 text-zinc-400">
+                      <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Loading files...
+                    </div>
+                  ) : (
+                    <FilesTable files={files} onDeleteSuccess={fetchDocuments} />
+                  )}
+                </div>
               </div>
-            ) : (
-              <FilesTable files={files} onDeleteSuccess={fetchDocuments} />
             )}
-          </div>
 
-          {/* Search Console Section */}
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Query Workspace</h3>
-            <SearchConsole files={files} />
+            {activeTab === "search" && (
+              <SearchConsole files={files} />
+            )}
+
+            {activeTab === "chat" && (
+              <AgentChatPanel />
+            )}
+
+            {activeTab === "reports" && (
+              <ReportsLibrary />
+            )}
           </div>
         </main>
       </div>
