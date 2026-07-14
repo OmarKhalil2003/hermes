@@ -30,6 +30,9 @@ class TrainingJob(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(default="pending", nullable=False)
     mlflow_run_id: Mapped[str | None] = mapped_column(nullable=True)
     error_message: Mapped[str | None] = mapped_column(nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        default=False, server_default="false", nullable=False
+    )
 
     # Relationships
     user: Mapped[User] = relationship(back_populates="training_jobs")

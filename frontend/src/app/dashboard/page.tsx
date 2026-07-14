@@ -8,13 +8,14 @@ import FilesTable, { DocumentInfo } from "@/components/FilesTable";
 import SearchConsole from "@/components/SearchConsole";
 import AgentChatPanel from "@/components/AgentChatPanel";
 import ReportsLibrary from "@/components/ReportsLibrary";
+import DeploymentConsole from "@/components/DeploymentConsole";
 import { apiFetch } from "@/lib/api";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [files, setFiles] = useState<DocumentInfo[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
-  const [activeTab, setActiveTab] = useState<"files" | "search" | "chat" | "reports">("files");
+  const [activeTab, setActiveTab] = useState<"files" | "search" | "chat" | "reports" | "deploy">("files");
 
   const fetchDocuments = async () => {
     try {
@@ -145,6 +146,16 @@ export default function DashboardPage() {
             >
               Generated Reports
             </button>
+            <button
+              onClick={() => setActiveTab("deploy")}
+              className={`pb-3 text-xs uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === "deploy"
+                  ? "text-indigo-400 border-indigo-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              Model Management
+            </button>
           </div>
 
           {/* Dynamic Render Tab Views */}
@@ -216,6 +227,10 @@ export default function DashboardPage() {
 
             {activeTab === "reports" && (
               <ReportsLibrary />
+            )}
+
+            {activeTab === "deploy" && (
+              <DeploymentConsole />
             )}
           </div>
         </main>
