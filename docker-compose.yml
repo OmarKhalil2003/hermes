@@ -119,6 +119,7 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"]
       interval: 10s
@@ -158,6 +159,7 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
 
   # Next.js UI Frontend Server
   frontend:
@@ -210,6 +212,7 @@ services:
       - "3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
 

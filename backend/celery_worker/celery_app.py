@@ -1,6 +1,11 @@
 from celery import Celery
 
 from backend.core.config import settings
+from backend.core.telemetry import setup_celery_instrumentation, setup_telemetry
+
+# Configure distributed tracing for Celery worker process
+setup_telemetry("hermes-celery-worker")
+setup_celery_instrumentation()
 
 celery_app = Celery(
     "hermes_tasks",
