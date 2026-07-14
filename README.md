@@ -142,4 +142,105 @@ py -3.13 -m uv run mypy .
 
 # Run Test Suite
 py -3.13 -m uv run pytest
+
+# Run Test Suite with Coverage
+py -3.13 -m uv run pytest --cov=backend --cov=agents --cov=finetuning --cov-report=term
 ```
+
+### ⚡ Load Testing (Locust)
+Locust has been added to test target endpoint capacities. To run concurrent load test simulations:
+```bash
+# Start headless load test for 30s with 10 users
+py -3.13 -m uv run locust -f tests/load/locustfile.py --headless -u 10 -r 2 -t 30s --host http://localhost:8000
+```
+
+---
+
+## 💾 Database Entity Relationship Diagram (ERD)
+
+The relational schema is configured in PostgreSQL/SQLite:
+
+```mermaid
+erDiagram
+    User ||--o{ UserSession : "has"
+    User ||--o{ UserRole : "assigned"
+    Role ||--o{ UserRole : "assigned"
+    Role ||--o{ RolePermission : "has"
+    Permission ||--o{ RolePermission : "has"
+    User ||--o{ Document : "uploads"
+    Document ||--o{ DocumentChunk : "contains"
+    User ||--o{ Conversation : "starts"
+    Conversation ||--o{ Message : "contains"
+    User ||--o{ TrainingJob : "runs"
+    TrainingJob ||--o| Evaluation : "evaluated_by"
+    User ||--o{ AuditLog : "triggers"
+```
+
+---
+
+## 🤖 Multi-Agent Workflow Sequence Map
+
+The hub-and-spoke multi-agent workgroup runs via LangGraph:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Backend as FastAPI Backend
+    participant Supervisor as Supervisor Agent
+    participant Helper as Helper Agents (Retriever/Research)
+    participant Reviewer as Reviewer Agent
+    participant Report as Report Agent
+    
+    User->>Backend: Post /api/v1/agent/research (Query)
+    Backend->>Supervisor: Start StateGraph Workflow
+    loop Multi-Agent Iterations
+        Supervisor->>Helper: Route task command (Retriever/Research)
+        Helper-->>Supervisor: Return task results & update state
+    end
+    Supervisor->>Reviewer: Request verification on findings
+    Reviewer-->>Supervisor: Approve findings / suggest edits
+    Supervisor->>Report: Direct compilation of PDF/PPTX/MD report
+    Report-->>Supervisor: Save generated files to directory
+    Supervisor->>Backend: Route to END node (Workflow Complete)
+    Backend-->>User: Return complete response stream with citations
+```
+
+---
+
+## ☸️ Kubernetes Deployment Guide
+
+Deployment files supporting HPAs and scaling reside in `k8s/`.
+
+### Prerequisites
+- Active Kubernetes cluster (e.g. Minikube or cloud provider).
+- Active Ingress Controller (e.g. NGINX Ingress Controller).
+
+### Deployment Steps
+```bash
+# 1. Create hermes namespace
+kubectl apply -f k8s/namespace.yaml
+
+# 2. Deploy ConfigMaps and Secret variables
+kubectl apply -f k8s/configs.yaml
+
+# 3. Deploy databases layer (Postgres, Redis, RabbitMQ, Qdrant)
+kubectl apply -f k8s/databases.yaml
+
+# 4. Deploy backend, celery worker, and frontend services
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/celery-worker.yaml
+kubectl apply -f k8s/frontend.yaml
+
+# 5. Deploy Ingress router controller
+kubectl apply -f k8s/ingress.yaml
+```
+
+To monitor running services:
+```bash
+# Check running pods status
+kubectl get pods -n hermes
+
+# Check active autoscaling replicas
+kubectl get hpa -n hermes
+```
+
