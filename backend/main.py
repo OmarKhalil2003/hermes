@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Depends, FastAPI, Request, Response
@@ -10,13 +11,11 @@ from backend.core.config import settings
 from backend.core.logging import logger, request_id_var, trace_id_var
 from backend.models.auth import User
 from backend.schemas.auth import UserOut
-
-from contextlib import asynccontextmanager
 from backend.services.deployment import init_active_adapter
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     await init_active_adapter()
     yield
 
