@@ -134,6 +134,16 @@ class ModelSettings(BaseSettings):
     base_model_path: str = Field(default="Qwen/Qwen2.5-3B-Instruct")
 
 
+class MonitoringSettings(BaseSettings):
+    """Distributed tracing and telemetry configurations."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="OTEL_", env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    exporter_otlp_endpoint: str = Field(default="http://localhost:4317")
+
+
 class Settings(BaseSettings):
     """Global application configuration."""
 
@@ -159,6 +169,7 @@ class Settings(BaseSettings):
     mlflow: MLflowSettings = Field(default_factory=MLflowSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
     models: ModelSettings = Field(default_factory=ModelSettings)
+    monitoring: MonitoringSettings = Field(default_factory=MonitoringSettings)
 
 
 # Global settings singleton

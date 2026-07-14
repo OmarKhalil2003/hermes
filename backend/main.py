@@ -10,6 +10,8 @@ from backend.api.deps import check_permissions
 from backend.api.v1.router import api_router
 from backend.core.config import settings
 from backend.core.logging import logger, request_id_var, trace_id_var
+from backend.core.metrics import PrometheusMetricsMiddleware
+from backend.core.telemetry import setup_fastapi_instrumentation, setup_telemetry
 from backend.models.auth import User
 from backend.schemas.auth import UserOut
 from backend.services.deployment import init_active_adapter
@@ -17,6 +19,7 @@ from backend.services.deployment import init_active_adapter
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+    setup_telemetry("hermes-backend")
     await init_active_adapter()
     yield
 
@@ -27,6 +30,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(PrometheusMetricsMiddleware)
+setup_fastapi_instrumentation(app)
 
 app.include_router(api_router, prefix="/api/v1")
 
