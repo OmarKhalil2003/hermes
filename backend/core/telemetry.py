@@ -17,9 +17,7 @@ def setup_telemetry(service_name: str) -> None:
     """Configures the TracerProvider and OTLP exporter to send spans to Jaeger."""
     # Check if a TracerProvider is already set (non-proxy) to avoid reload error
     if isinstance(trace.get_tracer_provider(), TracerProvider):
-        logger.info(
-            f"OpenTelemetry tracing is already configured for: {service_name}"
-        )
+        logger.info(f"OpenTelemetry tracing is already configured for: {service_name}")
         return
 
     # 1. Define resources

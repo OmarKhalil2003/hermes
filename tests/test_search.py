@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_db
 from backend.main import app
-from backend.repositories.auth import UserRepository
 from backend.repositories.document import ChunkRepository, DocumentRepository
 from backend.services.search import HybridSearchService
 
@@ -131,22 +130,27 @@ async def test_hybrid_search_service(db_session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_search_endpoint(client: AsyncClient, db_session: AsyncSession) -> None:
-    # 1. Register & Login user
-    reg_data = {"email": "searcher@example.com", "password": "mypassword123"}
-    await client.post("/api/v1/auth/register", json=reg_data)
-    login_resp = await client.post(
-        "/api/v1/auth/login",
-        data={"username": "searcher@example.com", "password": "mypassword123"},
-    )
-    access_token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
+    from sqlalchemy import select
+
+    from backend.models.auth import User
+
+    # 1. Get or create default user
+    stmt = select(User).where(User.email == "admin@hermes.ai")
+    res = await db_session.execute(stmt)
+    user = res.scalars().first()
+    if not user:
+        user = User(
+            email="admin@hermes.ai",
+            hashed_password="hashed_password",
+            is_active=True,
+            is_superuser=True,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
     # 2. Add document record
     doc_repo = DocumentRepository(db_session)
-    user_repo = UserRepository(db_session)
-    user = await user_repo.get_by_email("searcher@example.com")
-    assert user is not None
-
     doc = await doc_repo.create(
         {
             "id": uuid4(),
@@ -158,6 +162,7 @@ async def test_search_endpoint(client: AsyncClient, db_session: AsyncSession) ->
             "status": "processed",
         }
     )
+
     chunk_repo = ChunkRepository(db_session)
     c1 = await chunk_repo.create(
         {
@@ -199,11 +204,10 @@ async def test_search_endpoint(client: AsyncClient, db_session: AsyncSession) ->
             return_value=mock_query_response,
         ),
     ):
-        # 4. Search query API request
+        # 4. Search query API request (auth is bypassed in backend)
         response = await client.get(
             "/api/v1/documents/search",
             params={"query": "neural networks", "limit": 3},
-            headers=headers,
         )
         assert response.status_code == 200
         data = response.json()
