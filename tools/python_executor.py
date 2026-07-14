@@ -60,7 +60,7 @@ def execute_python_code(
                             return
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
-                    time.sleep(0.05)
+                    time.sleep(0.01)
             except Exception:
                 pass
 

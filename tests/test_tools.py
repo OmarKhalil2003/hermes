@@ -28,10 +28,15 @@ def test_python_executor_timeout() -> None:
 
 def test_python_executor_memory_limit() -> None:
     """Verifies that execute_python_code terminates when memory threshold is crossed."""
-    # Attempt to allocate ~100MB of bytes
-    code = 'x = b"a" * 100 * 1024 * 1024\nprint(len(x))'
-    result = execute_python_code.invoke({"code": code, "memory_limit_mb": 10})
-    assert "Error: Memory limit of 10" in result or "MemoryError" in result
+    code = (
+        "import time\n"
+        "data = []\n"
+        "for _ in range(20):\n"
+        "    data.append(b'a' * 10 * 1024 * 1024)\n"
+        "    time.sleep(0.01)\n"
+    )
+    result = execute_python_code.invoke({"code": code, "memory_limit_mb": 15})
+    assert "Error: Memory limit of 15" in result or "MemoryError" in result
 
 
 def test_is_safe_sql() -> None:
