@@ -121,7 +121,7 @@ class SQLAlchemyCheckpointSaver(BaseCheckpointSaver[str]):
             }
 
             for k, v in checkpoint.get("channel_versions", {}).items():
-                blob_key = (k, v)
+                blob_key = (k, str(v))
                 if blob_key in blob_map:
                     type_name, blob_data = blob_map[blob_key]
                     if type_name != "empty":
@@ -198,7 +198,7 @@ class SQLAlchemyCheckpointSaver(BaseCheckpointSaver[str]):
                     CheckpointBlobModel.thread_id == thread_id,
                     CheckpointBlobModel.checkpoint_ns == checkpoint_ns,
                     CheckpointBlobModel.channel == k,
-                    CheckpointBlobModel.version == v,
+                    CheckpointBlobModel.version == str(v),
                 )
                 blob_res = await session.execute(blob_stmt)
                 blob_row = blob_res.scalar_one_or_none()
@@ -212,7 +212,7 @@ class SQLAlchemyCheckpointSaver(BaseCheckpointSaver[str]):
                             thread_id=thread_id,
                             checkpoint_ns=checkpoint_ns,
                             channel=k,
-                            version=v,
+                            version=str(v),
                             type_name=type_name,
                             blob_data=blob_data,
                         )
