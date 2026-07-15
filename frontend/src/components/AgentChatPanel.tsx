@@ -130,7 +130,7 @@ export default function AgentChatPanel() {
 
     try {
       const accessToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/agents/research`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/agents/research`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -160,7 +160,7 @@ export default function AgentChatPanel() {
 
       // Fetch sample citations in the background to mock tooltip snippet contents if available
       try {
-        const docSearchUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/documents/search?query=${encodeURIComponent(userMessage.content)}&limit=3`;
+        const docSearchUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/documents/search?query=${encodeURIComponent(userMessage.content)}&limit=3`;
         const docRes = await fetch(docSearchUrl, {
           headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
         });
