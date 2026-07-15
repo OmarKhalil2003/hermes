@@ -343,7 +343,7 @@ export default function DeploymentConsole() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-zinc-500">Created: {new Date(job.created_at).toLocaleString()}</span>
+                    <span className="text-zinc-500" suppressHydrationWarning>Created: {new Date(job.created_at).toLocaleString()}</span>
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${
                         job.status === "completed"
@@ -447,7 +447,7 @@ export default function DeploymentConsole() {
                     <td className="p-4 text-center text-indigo-400 font-bold">{(ev.metrics.rougeL || 0).toFixed(3)}</td>
                     <td className="p-4 text-center text-purple-400 font-bold">{(ev.metrics.bleu || 0).toFixed(3)}</td>
                     <td className="p-4 text-center text-teal-400 font-bold">{(ev.metrics.bertscore_f1 || 0).toFixed(3)}</td>
-                    <td className="p-4 text-right text-zinc-400 font-sans">{new Date(ev.created_at).toLocaleString()}</td>
+                    <td className="p-4 text-right text-zinc-400 font-sans" suppressHydrationWarning>{new Date(ev.created_at).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

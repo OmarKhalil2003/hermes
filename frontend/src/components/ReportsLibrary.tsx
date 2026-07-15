@@ -141,7 +141,7 @@ export default function ReportsLibrary() {
                     <span className="text-sm font-semibold text-white truncate group-hover:text-indigo-400 transition-colors" title={report.filename}>
                       {report.filename}
                     </span>
-                    <span className="text-[10px] text-zinc-500 font-mono">
+                    <span className="text-[10px] text-zinc-500 font-mono" suppressHydrationWarning>
                       {formatBytes(report.size_bytes)}  |  {new Date(report.created_at).toLocaleString()}
                     </span>
                   </div>
