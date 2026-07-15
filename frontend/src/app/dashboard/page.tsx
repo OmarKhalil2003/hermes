@@ -185,7 +185,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <span className="text-zinc-500 block uppercase tracking-wider text-[10px]">Account Created At</span>
-                        <span className="text-zinc-300">
+                        <span className="text-zinc-300" suppressHydrationWarning>
                           {user ? new Date(user.created_at).toLocaleString() : "Loading..."}
                         </span>
                       </div>
